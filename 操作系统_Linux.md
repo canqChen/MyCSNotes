@@ -1,6 +1,4 @@
-# 操作系统
-
-## 基本概念
+# 操作系统基本概念
 
 * 用户态和内核态
   * 用户态和内核态的区别
@@ -38,9 +36,9 @@
     - 指令指针IP则是指向下个条要取指的指令，而不是EU要执行的指令。而断点则应该是要执行的指令内存地址，而不是IP内的下一条要取指的指令地址
   * **PC是模型机中的概念，IP是实际使用的，调试时我们发现，IP实现的就是PC的功能**
 
-## 进程管理
+# 进程管理
 
-### 进程和线程
+## 进程和线程
 
 * **进程的概念**：**进程是程序在某个数据集合上的一次运行活动，也是操作系统进行资源分配和保护的基本单位**。通俗来说，**「进程就是程序的一次执行过程」**，程序是静态的，它作为系统中的一种资源是永远存在的。而进程是动态的，它是动态的产生，变化和消亡的，拥有其自己的生命周期
 
@@ -150,7 +148,7 @@
 
   * fork，vfork，clone**都是linux的系统调用**，这三个函数分别调用了**sys_fork、sys_vfork、sys_clone**，最终都调用了do_fork函数，**差别在于参数的传递和一些基本的准备工作不同，主要用来linux创建新的子进程或线程**（vfork创造出来的是线程）
 
-    ![fork_vfork_clone](https://gitee.com/canqchen/cloudimg/raw/master/img/fork_vfork_clone.png)
+    ![fork_vfork_clone](imgs/os/fork_vfork_clone.png)
 
   * fork
 
@@ -168,19 +166,19 @@
 
       * 调用fork()之后先执行哪个进程的是由Linux下专有文件/proc/sys/kernel/sched_child_runs_first的值来确定的(值为0父进程先执行，非0子进程先执行)
 
-      * ##### fork后子进程只复制父进程的页表，父子进程的代码段是相同的，所以代码段是没必要复制的，因此内核将代码段标记为只读，这样父子进程就可以安全的共享此代码段了。fork之后在进程创建代码段时，新子进程的进程级页表项都指向和父进程相同的物理页帧
+      * fork后子进程只复制父进程的页表，父子进程的代码段是相同的，所以代码段是没必要复制的，因此内核将代码段标记为只读，这样父子进程就可以安全的共享此代码段了。fork之后在进程创建代码段时，新子进程的进程级页表项都指向和父进程相同的物理页帧
 
-        <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/fork_mem.png" alt="fork_mem" style="zoom:75%;" />
+        <img src="imgs/os/fork_mem.png" alt="fork_mem" style="zoom: 80%;" />
 
       * **而对于父进程的数据段，堆段，栈段中的各页，由于父子进程要相互独立，所以我们采用写实复制的技术，来最大化的提高内存以及内核的利用率。刚开始，内核做了一些设置，令这些段的页表项指向父进程相同的物理内存页。调用fork之后，内核会捕获所有父进程或子进程针对这些页面的修改企图(说明此时还没修改)并为将要修改的页面创建拷贝。系统将新的页面拷贝分配给被内核捕获的进程，还会对子进程的相应页表项做适当的调整，现在父子进程就可以分别修改各自的上述段，不再互相影响了**
 
       * COW前
 
-        <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/fork_cow1.png" alt="fork_cow1" style="zoom:75%;" />
+        <img src="imgs/os/fork_cow1.png" alt="fork_cow1" style="zoom:80%;" />
 
       * COW后
 
-        <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/fork_cow2.png" alt="fork_cow2" style="zoom:75%;" />
+        <img src="imgs/os/fork_cow2.png" alt="fork_cow2" style="zoom:80%;" />
 
   * vfork
 
@@ -209,7 +207,7 @@
 
     以下是flags可取的值
 
-    <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/clone.jpg" alt="clone" style="zoom:80%;" />
+    <img src="imgs/os/clone.png" alt="clone" style="zoom:80%;" />
 
   * clone和fork的区别：
 
@@ -217,13 +215,13 @@
 
 * clone和fork最大不同在于**clone不再复制父进程的栈空间，而是自己创建一个新的**。 （void *child_stack）也就是第二个参数，需要分配栈指针的空间大小，所以它不再是继承或者复制，而是全新的创造
 
-### 协程
+## 协程
 
 * 基本概念
 
   * **协程，英文Coroutines，是一种比线程更加轻量级的存在。**正如一个进程可以拥有多个线程一样，一个线程也可以拥有多个协程
 
-    <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/corotines.jpg" alt="corotines" style="zoom:60%;" />
+    <img src="imgs/os/corotines.png" alt="corotines" style="zoom:60%;" />
 
 * 进程，线程，协程的上下文切换
 
@@ -294,7 +292,7 @@
   * **Go语言**
   * **Java语言(Kilim框架)**
 
-### 同步互斥
+## 同步互斥
 
 * [详见1](https://www.jianshu.com/p/6526078a1fab)
 
@@ -435,7 +433,7 @@
   }
   ```
 
-### 死锁
+## 死锁
 
 * 死锁
 
@@ -464,7 +462,7 @@
 
     * 判断“系统安全状态”法：**在进行系统资源分配之前，先计算此次资源分配的安全性**。若此次分配不会导致系统进入不安全状态，则将资源分配给**进程； 否则，让进程**等待
 
-      ![safe_status](https://gitee.com/canqchen/cloudimg/raw/master/img/safe_status.png)
+      ![safe_status](imgs/os/safe_status.png)
 
       * **图 a 的第二列 Has 表示已拥有的资源数，第三列 Max 表示总共需要的资源数，Free 表示还有可以使用的资源数**。从图 a 开始出发，先让 B 拥有所需的所有资源（图 b），运行结束后释放 B，此时 Free 变为 5（图 c）；接着以同样的方式运行 C 和 A，使得所有进程都能成功运行，因此可以称图 a 所示的状态时安全的
       * 定义：**如果没有死锁发生，并且即使所有进程突然请求对资源的最大需求，也仍然存在某种调度次序能够使得每一个进程运行完毕，则称该状态是安全的**
@@ -481,13 +479,13 @@
 
       * 一个小城镇的银行家，他向一群客户分别承诺了一定的贷款额度，**算法要做的是判断对请求的满足是否会进入不安全状态**，如果是，就拒绝请求；否则予以分配
 
-        ![bank](https://gitee.com/canqchen/cloudimg/raw/master/img/bank.png)
+        ![bank](imgs/os/bank.png)
 
         上图 c 为不安全状态，因此算法会拒绝之前的请求，从而避免进入图 c 中的状态
 
     * 多个资源银行家算法
 
-      ![multi_bank](https://gitee.com/canqchen/cloudimg/raw/master/img/multi_bank.png)
+      ![multi_bank](imgs/os/multi_bank.png)
 
       * 上图中有五个进程，四个资源。左边的图表示已经分配的资源，右边的图表示还需要分配的资源。最右边的 E、P 以及 A 分别表示：总资源、已分配资源以及可用资源，注意这三个为向量，而不是具体数值，例如 A=(1020)，表示 4 个资源分别还剩下 1/0/2/0
       * 检查一个状态是否安全的算法如下：
@@ -508,7 +506,7 @@
 
   * 无锁，即没有对资源进行锁定，即所有的线程都能访问并修改同一个资源，但同时只有一个线程能修改成功。无锁典型的特点就是一个修改操作在一个循环内进行，线程会不断的尝试修改共享资源，如果没有冲突就修改成功并退出否则就会继续下一次循环尝试。所以，如果有多个线程修改同一个值必定会有一个线程能修改成功，而其他修改失败的线程会不断重试直到修改成功
 
-### CAS技术
+## CAS技术
 
 * 概念
 
@@ -539,7 +537,7 @@
 
   * 不加锁的情况下来修改值，CAS是怎么自旋如下图
 
-    <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/cas.jpg" alt="cas" style="zoom:67%;" />
+    <img src="imgs/os/cas.png" alt="cas" style="zoom:80%;" />
 
   * 现在`Data`中存放的是`num=0`，线程A将`num=0`拷贝到自己的工作内存中计算（做+1操作）`E=0`，计算的结果为`V=1`
 
@@ -563,7 +561,7 @@
     * 只能保证一个共享变量的原子操作。当对一个共享变量执行操作时，我们可以使用循环CAS的方式来保证原子操作，但是对多个共享变量操作时，循环CAS就无法保证操作的原子性，这个时候就可以用锁，或者有一个取巧的办法，就是**把多个共享变量合并成一个共享变量来操作**。比如有两个共享变量 i=2，j=a，合并一下 ij=2a，然后用CAS来操作
     * 可以用AtomicReference (java)，这个是封装自定义对象的，多个变量可以放一个自定义对象里，然后他会检查这个对象的引用是不是同一个。如果多个线程同时对一个对象变量的引用进行赋值，用AtomicReference的CAS操作可以解决并发冲突问题
 
-### IPC
+## IPC
 
 * 进程间通信(IPC)，[详见](https://www.cnblogs.com/zgq0/p/8780893.html)
 
@@ -639,7 +637,7 @@
 
   * 常见信号表
 
-    ![signal_tab](https://gitee.com/canqchen/cloudimg/raw/master/img/signal_tab.jpg)
+    ![signal_tab](imgs/os/signal_tab.png)
 
   * 信号产生方式
 
@@ -694,7 +692,7 @@
       * 定时器
       
         ```c++
-      #include<unistd.h>
+        #include<unistd.h>
         unsigned int alarm(unsigned int seconds);
         //调用alarm函数可以对当前进程设置一个闹钟，也就是告诉操作系统在seconds秒之后对当前进程发送SIGALRM信号，该信号的默认处理动作是终止当前进程
         ```
@@ -773,7 +771,7 @@
 
   * **信号处理过程**
 
-    <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/sig_cap.jpg" alt="sig_cap" style="zoom:80%;" />
+    <img src="imgs/os/sig_cap.png" alt="sig_cap" style="zoom:80%;" />
 
   * 信号接收
 
@@ -800,7 +798,7 @@
 
     * 进程收到一个信号时，**并不会立即就去处理这个信号，而是先将收到的信号保存下来，并在合适的时候对信号进行处理**，**操作系统会在进程进入了内核态并从内核态返回用户态时，检测进程中可以进行处理的信号，并进行处理**
 
-      ##### 用户写好的代码会在什么情况下进入内核态呢？
+      #### 用户写好的代码会在什么情况下进入内核态呢？
 
       - 调用系统调用接口
       - 异常
@@ -810,30 +808,33 @@
 
   * 信号量用于进程间同步，若要在进程间传递数据需要结合共享内存
     * 信号量基于操作系统的 PV 操作，程序对信号量的操作都是原子操作
+    
     * 每次对信号量的 PV 操作不仅限于对信号量值加 1 或减 1，而且可以加减任意正整数
+    
     * 支持信号量组
+    
     * 原型
-
-  ```c
-  #include <sys/sem.h>
-  // 创建或获取一个信号量组：若成功返回信号量集ID，失败返回-1
-  int semget(key_t key, int num_sems, int sem_flags);
-  // 对信号量组进行操作，改变信号量的值：成功返回0，失败返回-1
-  int semop(int semid, struct sembuf semoparray[], size_t numops);  
-  // 控制信号量的相关信息
-  int semctl(int semid, int sem_num, int cmd, ...);
-  ```
-
+    
+      ```
+      #include <sys/sem.h>
+      // 创建或获取一个信号量组：若成功返回信号量集ID，失败返回-1
+      int semget(key_t key, int num_sems, int sem_flags);
+      // 对信号量组进行操作，改变信号量的值：成功返回0，失败返回-1
+      int semop(int semid, struct sembuf semoparray[], size_t numops);  
+      // 控制信号量的相关信息
+      int semctl(int semid, int sem_num, int cmd, ...);
+      ```
+    
   * 当`semget`创建新的信号量集合时，必须指定集合中信号量的个数（即`num_sems`），通常为1； 如果是引用一个现有的集合，则将`num_sems`指定为 0 。在`semop`函数中，`sembuf`结构的定义如下：
 
-  ```c
-  struct sembuf 
-  {
-      short sem_num; // 信号量组中对应的序号，0～sem_nums-1
-      short sem_op;  // 信号量值在一次操作中的改变量
-      short sem_flg; // IPC_NOWAIT, SEM_UNDO
-  }
-  ```
+    ```
+    struct sembuf 
+    {
+        short sem_num; // 信号量组中对应的序号，0～sem_nums-1
+        short sem_op;  // 信号量值在一次操作中的改变量
+        short sem_flg; // IPC_NOWAIT, SEM_UNDO
+    }
+    ```
 
   * 其中` sem_op` 是一次操作中的信号量的改变量：
 
@@ -862,40 +863,46 @@
 * **共享内存**：指两个或多个进程共享一个给定的存储区
 
   * **共享内存是最快的一种 IPC，因为进程是直接对内存进行存取**
+  
   * **因为多个进程可以同时操作，所以需要进行同步**
+  
   * **信号量+共享内存通常结合在一起使用，信号量用来同步对共享内存的访问**
+  
   * **共享内存实现原理**：共享内存是通过**把同一块内存分别映射到不同的进程空间**中实现进程间通信。而共享内存本身不带任何互斥与同步机制，但当多个进程同时对同一内存进行读写操作时会破坏该内存的内容，所以，在实际中，同步与互斥机制需要用户来完成
+  
   * 在**/proc/sys/kernel/**目录下，记录着共享内存的一些限制，如一个共享内存区的**最大字节数shmmax**，系统范围内最大共享内存区标识符数shmmni等，可以手工对其调整，但不推荐这样做
+
   * 共享内存使用
     * 进程必须首先分配它
     * 随后需要访问这个共享内存块的每一个进程都必须将这个共享内存绑定到自己的地址空间中
     * 当完成通信之后，所有进程都将脱离共享内存，并且由一个进程释放该共享内存块
-
+  
   * 原型
-
-  ```c
-  #include <sys/shm.h>
-  // 创建或获取一个共享内存：成功返回共享内存ID，失败返回-1
-  int shmget(key_t key, size_t size, int flag);
-  // 连接共享内存到当前进程的地址空间：成功返回指向共享内存的指针，失败返回-1
-  void *shmat(int shm_id, const void *addr, int flag);
-  // 断开与共享内存的连接：成功返回0，失败返回-1
-  int shmdt(void *addr); 
-  // 控制共享内存的相关信息：成功返回0，失败返回-1
-  int shmctl(int shm_id, int cmd, struct shmid_ds *buf);
-  ```
-
+  
+    ```
+    #include <sys/shm.h>
+    // 创建或获取一个共享内存：成功返回共享内存ID，失败返回-1
+    int shmget(key_t key, size_t size, int flag);
+    // 连接共享内存到当前进程的地址空间：成功返回指向共享内存的指针，失败返回-1
+    void *shmat(int shm_id, const void *addr, int flag);
+    // 断开与共享内存的连接：成功返回0，失败返回-1
+    int shmdt(void *addr); 
+    // 控制共享内存的相关信息：成功返回0，失败返回-1
+    int shmctl(int shm_id, int cmd, struct shmid_ds *buf);
+    ```
+  
   * 当用`shmget`函数创建一段共享内存时，必须指定其 size；而如果引用一个已存在的共享内存，则将 size 指定为0 
     * **当一段共享内存被创建以后，它并不能被任何进程访问。必须使用`shmat`函数连接该共享内存到当前进程的地址空间，连接成功后把共享内存区对象映射到调用进程的地址空间，随后可像本地空间一样访问**
     * `shmdt`函数是用来断开`shmat`建立的连接的。注意，**这并不是从系统中删除该共享内存，只是当前进程不能再访问该共享内存而已**
     * `shmctl`函数可以对共享内存执行多种操作，根据参数 cmd 执行相应的操作。常用的是`IPC_RMID`（从系统中删除该共享内存）
+  
   * **mmap实现共享内存**
     * mmap系统调用并不是完全为了用于共享内存而设计的。它本身提供了不同于一般对普通文件的访问方式，进程可以像读写内存一样对普通文件的操作。而Posix或系统V的共享内存IPC则纯粹用于共享目的，**当然mmap()实现共享内存也是其主要应用之一**
     * **mmap系统调用使得进程之间通过映射同一个普通文件实现共享内存**。普通文件被映射到进程地址空间后，进程可以像访问普通内存一样对文件进行访问，不必再 调用read()，write（）等操作。
     * mmap并不分配空间, 只是将文件映射到调用进程的地址空间里, 然后你就可以用memcpy等操作写文件，而不用write()了。写完后用msync()同步一下，你所写的内容就保存到文件里了。 **不过这种方式没办法增加文件的长度**，**因为要映射的长度在调用mmap()的时候就决定了**
     * 简单说就是把一个文件的内容在内存里面做一个映像，内存比磁盘快些
 
-### 线程间通信
+## 线程间通信
 
 * 线程是共享同一进程的地址空间的，拟线程间的通信将会很容易，直接就可以通过全局变量来交换数据。但这种访问的便利性也带来了一些风险，通常当有多个线程访问相同的共享数据时需要**同步**或**互斥锁**
 
@@ -1064,7 +1071,7 @@
       ```
 
 
-## 内存管理
+# 内存管理
 
 * [详见1](http://mp.weixin.qq.com/s?__biz=MzIwNTc4NTEwOQ==&mid=2247491042&idx=1&sn=6a27149508df23d5414d279feac1c304&chksm=972acc98a05d458e5a147f1fd8306ca4f384903ec5b18560b67b15849f43942e60563f0ce5bf&mpshare=1&scene=24&srcid=0321sCT49uCvhw9cMJGzFOic&sharer_sharetime=1616262001659&sharer_shareid=0722ed5128948b6436f8552f291f9b0b#rd)
 * 虚拟内存
@@ -1106,9 +1113,9 @@
     * **一条指令在执行期间，可能产生多次缺页中断**
     * **缺页中断返回是，执行产生中断的一条指令，而一般的中断返回是，执行下一条指令**
 
-## Linux
+# Linux
 
-### 基础知识
+## 基础知识
 
 * 什么是Linux内核
 
@@ -1168,7 +1175,7 @@
     * 如果你用的vmware 虚拟机，命令窗口切换的快捷键为 Alt + Space + F1~F6. 如果你在图形界面下请按Alt + Shift + Ctrl + F1~F6 切换至命令窗口
 
 
-### [守护进程](https://blog.csdn.net/mijichui2153/article/details/81394387)
+## [守护进程](https://blog.csdn.net/mijichui2153/article/details/81394387)
 
 * 守护进程概念
 
@@ -1258,7 +1265,7 @@
 
 * 步骤流程图
 
-  <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/daemon.png" alt="daemon" style="zoom:80%;" />
+  <img src="imgs/os/daemon.png" alt="daemon" style="zoom:67%;" />
 
 * 代码实现
 
@@ -1325,7 +1332,7 @@
   // 成功返回0，失败返回-1并设置errno
   ```
 
-### 系统监测
+## 系统监测
 
 * CPU，内存，IO监控
 
@@ -1639,11 +1646,11 @@
   lsof -p 5454
   ```
 
-### 编译调试
+## 编译调试
 
 * C++进程内存分布
 
-  ![mem_align](https://gitee.com/canqchen/cloudimg/raw/master/img/mem_align.png)
+  <img src="imgs/os/mem_align.png" alt="mem_align" style="zoom:90%;" />
 
 * ar, nm, ldd, readelf, objdump
 
@@ -1916,11 +1923,11 @@
   - 强行 cat 一个大文件会造成内存溢出，通常将**cat**命令和**split**命令混合使用。
   - 比如内存是250M， 那么将10G的文件切分成若干个250M的文件，然后文本查找
 
-### 文件管理
+## 文件管理
 
 * Linux目录结构
 
-  ![dir](https://gitee.com/canqchen/cloudimg/raw/master/img/dir.png)
+  <img src="imgs/os/dir.png" alt="dir" style="zoom:80%;" />
 
   * 常见目录说明：
 
@@ -2385,7 +2392,7 @@
     * 打开一个文件以后，系统就以inode号码来识别这个文件，不再考虑文件名。因此，通常来说，系统无法从inode号码得知文件名
   * 第3点使得软件更新变得简单，可以在不关闭软件的情况下进行更新，不需要重启。因为系统通过inode号码，识别运行中的文件，不通过文件名。更新的时候，新版文件以同样的文件名，生成一个新的inode，不会影响到运行中的文件。等到下一次运行这个软件的时候，文件名就自动指向新版文件，旧版文件的inode则被回收
 
-### 零拷贝技术
+## 零拷贝技术
 
 * 概念
 
@@ -2415,7 +2422,7 @@
 
   * 当应用程序访问某块数据时，操作系统首先会检查，是不是最近访问过此文件，文件内容是否缓存在内核缓冲区，如果是，操作系统则直接根据read系统调用提供的buf地址，将内核缓冲区的内容拷贝到buf所指定的用户空间缓冲区中去。如果不是，**操作系统则首先将磁盘上的数据拷贝的内核缓冲区，这一步目前主要依靠DMA来传输**，然后再把内核缓冲区上的内容拷贝到用户缓冲区中。接下来，write系统调用再把用户缓冲区的内容拷贝到网络堆栈相关的内核缓冲区中，最后socket再把内核缓冲区的内容发送到网卡上
 
-    <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/multi_copy.png" alt="multi_copy" style="zoom:80%;" />
+    <img src="imgs/os/multi_copy.png" alt="multi_copy" style="zoom:80%;" />
 
   * 从上图中可以看出，共产生了**两次系统调用，四次数据拷贝**，即使使用了DMA来处理了与硬件的通讯，CPU仍然需要处理两次数据拷贝，与此同时，在用户态与内核态也发生了多次上下文切换，无疑也加重了CPU负担。在此过程中，我们没有对文件内容做任何修改，那么在内核空间和用户空间来回拷贝数据无疑就是一种浪费，而零拷贝主要就是为了解决这种低效性
 
@@ -2434,7 +2441,7 @@
 
     * 应用程序调用mmap()，**磁盘上的数据会通过DMA被拷贝的内核缓冲区**，**接着操作系统会把这段内核缓冲区与应用程序共享**，**这样就不需要把内核缓冲区的内容往用户空间拷贝**。应用程序**再调用write()**，**操作系统直接将内核缓冲区的内容拷贝到socket缓冲区中**，这一切都发生在内核态，最后，socket缓冲区再把数据发到网卡去
 
-    <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/mmap.png" alt="mmap" style="zoom:80%;" />
+    <img src="imgs/os/mmap.png" alt="mmap" style="zoom:80%;" />
 
   * 使用mmap替代read很明显减少了一次拷贝，当拷贝数据量很大时，无疑提升了效率。**但是使用mmap是有代价的。当你使用mmap时，你可能会遇到一些隐藏的陷阱。例如，当你的程序map了一个文件，但是当这个文件被另一个进程截断(truncate)时, write系统调用会因为访问非法地址而被SIGBUS信号终止**。SIGBUS信号默认会杀死你的进程并产生一个coredump,如果你的服务器这样被中止了，那会产生一笔损失。通常可以使用以下解决方案避免这种问题：
 
@@ -2470,13 +2477,13 @@
 
   * 系统调用`sendfile()`在代表输入文件的描述符`in_fd`和代表输出文件的描述符`out_fd`之间传送文件内容（字节）。描述符`out_fd`**必须指向一个套接字**，而`in_fd`**指向的文件必须是可以**`mmap`的。这些局限限制了sendfile的使用，**使sendfile只能将数据从文件传递到套接字上**，反之则不行。使用sendfile不仅**减少了数据拷贝的次数(1次)**，**还减少了上下文切换(一次调用，两次切换)**，**数据传送始终只发生在kernel space**
 
-    <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/sendfile.png" alt="sendfile" style="zoom:80%;" />
+    <img src="imgs/os/sendfile.png" alt="sendfile" style="zoom:80%;" />
 
   * 在调用sendfile时，如果有其它进程截断了文件会发生什么呢？假设我们没有设置任何信号处理程序，**sendfile调用仅仅返回它在被中断之前已经传输的字节数，errno会被置为success**。如果我们在调用sendfile之前给文件加了锁，sendfile的行为仍然和之前相同，我们还会收RT_SIGNAL_LEASE的信号
 
   * sendfile仍然存在一次拷贝，就是页缓存到socket缓存的拷贝。现在我们仅仅需要把**缓冲区描述符传到socket缓冲区，再把数据长度传过去，这样DMA控制器直接将页缓存中的数据打包发送到网络中就可以了**
 
-    <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/zero_sendfile.png" alt="zero_sendfile" style="zoom:80%;" />
+    <img src="imgs/os/zero_sendfile.png" alt="zero_sendfile" style="zoom:80%;" />
 
     * sendfile系统调用利用DMA引擎将文件内容拷贝到内核缓冲区去，然后将带有文件位置和长度信息的缓冲区描述符添加socket缓冲区去，这一步不会将内核中的数据拷贝到socket缓冲区中，**DMA引擎会将内核缓冲区的数据拷贝到协议引擎中去，避免了最后一次拷贝**
 
