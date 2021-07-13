@@ -1900,23 +1900,22 @@
     * ulimit -c unlimted（**打开core，默认没有打开**）
     * 运行./a.out（编译的时候加调试选项-g） **死锁阻塞，Ctrl+\ 产生core dump**
     * gdb ./a.out core.xxx
-    * thread apply all bt查看死锁位置
 
 * **gdb调试死锁**
 
   * **借助 Core Dump**。在程序莫名其妙down掉了，此时操作系统会把当前的内存状况存储在一个core 文件中，通过查看core文件就可以直观的程序是因为什么而垮掉了。有时候程序down了, 但是core文件却没有生成，core文件的生成跟你当前系统的环境设置有关系, 可以用下面的语句设置一下, 然后再运行程序便会生成core文件
 
-    ```c++
+    ```shell
     ulimit -c unlimited
     ```
 
-  * core文件生成的位置一般于运行程序的路径相同, 文件名一般为core.进程号
+  * core文件生成的位置一般于运行程序的路径相同, 文件名一般为“**core.进程号**”
 
   * 在多线程调试中使用Core Dump：
 
     * 使用 kill 命令产生 core dump文件：kill -11 pid 产生core文件
     * 使用gdb工具打开core文件 gdb dead_lock_demo core
-    * 打印堆栈信息 thread apply all bt
+    * 打印堆栈信息 **thread apply all bt查看死锁位置**
 
 * 如何读取一个10G文件，cat一个10g文件会发生什么
 
