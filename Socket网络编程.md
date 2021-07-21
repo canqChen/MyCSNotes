@@ -2,7 +2,7 @@
 
 ## Socket基础知识
 
-<img src="https://gitee.com/canqchen/cloudimg/raw/master/img/socket%20connection.jpg" alt="socket connection" style="zoom:50%;" />
+<img src="imgs/socket/socket%20connection.png" alt="socket connection" style="zoom: 33%;" />
 
 * 客户端调用connect发送SYN包，客户端协议栈收到 ACK 之后，使得应用程序从 connect 调用返回，表示客户端到服务器端的单
   向连接建立成功
@@ -31,11 +31,11 @@
   * 七元组：源IP地址、目的IP地址、**协议号**、源端口、目的端口，**服务类型以及接口索引**
 * 信号SIGPIPE与EPIPE错误码
   * 在linux下写socket的程序的时候，**如果服务器尝试send到一个disconnected socket上，就会让底层抛出一个SIGPIPE信号**。 这个信号的缺省处理方法是退出进程，大多数时候这都不是我们期望的。也就是说，**当服务器繁忙，没有及时处理客户端断开连接的事件，就有可能出现在连接断开之后继续发送数据的情况，如果对方断开而本地继续写入的话，就会造成服务器进程意外退出**
-  * 根据信号的默认处理规则SIGPIPE信号的默认执行动作是terminate(终止、退出),所以client会退出。若不想客户端退出可以把 SIGPIPE设为SIG_IGN 如：signal(SIGPIPE, SIG_IGN); 这时SIGPIPE交给了系统处理。 服务器采用了fork的话，要收集垃圾进程，防止僵尸进程的产生，可以这样处理： signal(SIGCHLD,SIG_IGN); 交给系统init去回收。 这里子进程就不会产生僵尸进程了
+  * 根据信号的默认处理规则SIGPIPE信号的默认执行动作是terminate(终止、退出)，所以client会退出。若不想客户端退出可以把 SIGPIPE设为SIG_IGN 如：signal(SIGPIPE, SIG_IGN); 这时SIGPIPE交给了系统处理。 服务器采用了fork的话，要收集垃圾进程，防止僵尸进程的产生，可以这样处理： signal(SIGCHLD,SIG_IGN); 交给系统init去回收。 这里子进程就不会产生僵尸进程了
 * **如何检测对端已经关闭socket**
   * 根据ERRNO和recv结果进行判断
     * 在UNIX/LINUX下，**非阻塞模式SOCKET可以采用recv+MSG_PEEK的方式进行判断**，其中MSG_PEEK保证了仅仅进行状态判断，而不影响数据接收
-      对于主动关闭的SOCKET, recv返回-1，而且errno被置为9（#define EBADF  9  // Bad file number ）或104 (#define ECONNRESET 104 // Connection reset by peer)
+    * 对于主动关闭的SOCKET, recv返回-1，而且errno被置为9（#define EBADF  9  // Bad file number ）或104 (#define ECONNRESET 104 // Connection reset by peer)
     * 对于被动关闭的SOCKET，recv返回0，而且errno被置为11（#define EWOULDBLOCK EAGAIN // Operation would block ）**对正常的SOCKET, 如果有接收数据，则返回>0, 否则返回-1，而且errno被置为11**（#define EWOULDBLOCK EAGAIN // Operation would block ）因此对于简单的状态判断(不过多考虑异常情况)：recv返回>0，  正常
 
 # IO多路复用
@@ -95,13 +95,10 @@
 
     * 对端发送 RST。发送 RST 的常见场景：
 
-      1)  系统崩溃重启(进程崩溃，只要内核是正常工作都还能兜底，发送的是FIN，不是这里讨论的RST)，四元组消失。此时收到任何数据，都会响应 RST
-
-      2）设置 linger 参数，l_onoff 为 1 开启，但是 l_linger = 0 超时参数为0。此时close() 将直接发送 RST
-
-      3)  接收缓冲区中还有数据，直接 close()， 接收缓冲区中的内容丢弃，直接发送 RST
-
-      4）已经调用 close ，close 会立马发送一个 FIN。注意：仅仅从 FIN 数据包上，无法断定对端是 close 还是仅仅 shutdown(SHUT_WR) 半关闭。**此时如果往对端发送数据，若对端已经 close()，对端会回复 RST**
+      1. 系统崩溃重启(进程崩溃，只要内核是正常工作都还能兜底，发送的是FIN，不是这里讨论的RST)，四元组消失。此时收到任何数据，都会响应 RST
+      2. 设置 linger 参数，l_onoff 为 1 开启，但是 l_linger = 0 超时参数为0。此时close() 将直接发送 RST
+      3. 接收缓冲区中还有数据，直接 close()， 接收缓冲区中的内容丢弃，直接发送 RST
+      4. 已经调用 close ，close 会立马发送一个 FIN。注意：仅仅从 FIN 数据包上，无法断定对端是 close 还是仅仅 shutdown(SHUT_WR) 半关闭。**此时如果往对端发送数据，若对端已经 close()，对端会回复 RST**
 
   * **表示读写都关闭**
 
@@ -109,7 +106,24 @@
 
 ## [I/O模型](https://github.com/CyC2018/CS-Notes/blob/master/notes/Socket.md)
 
-## 时间处理模式
+* Unix 有五种 I/O 模型：
+
+  - 阻塞式 I/O
+  - 非阻塞式 I/O
+  - I/O 复用（select 和 poll）
+  - 信号驱动式 I/O（SIGIO）
+  - 异步 I/O（AIO）
+
+* 五大 I/O 模型比较
+
+  - 同步 I/O：将数据从内核缓冲区复制到应用进程缓冲区的阶段（第二阶段），应用进程会阻塞
+  - 异步 I/O：第二阶段应用进程不会阻塞
+
+  同步 I/O 包括阻塞式 I/O、非阻塞式 I/O、I/O 复用和信号驱动 I/O ，它们的主要区别在第一个阶段。非阻塞式 I/O 、信号驱动 I/O 和异步 I/O 在第一阶段不会阻塞
+
+## 事件处理模式
+
+### Reactor
 
 * Reactor的组成
 
@@ -123,7 +137,7 @@
 
   * Initiation Dispatcher(**初始分发器**)：实际上就是**Reactor角色**。它本身定义了一些规范，这些规范用于控制事件的调度方式，同时又**提供了应用进行事件处理器的注册、删除等设施**。它本身是整个**事件处理器的核心所在**，Initiation Dispatcher会通过Synchronous Event Demultiplexer来等待事件的发生。一旦事件发生，Initiation Dispatcher首先会**分离出每一个事件，然后调用事件处理器，最后调用相关的回调方法来处理这些事件**
 
-    <img src="https://gitee.com/canqchen/cloudimg/raw/master/img/reactor.jpg" alt="reactor" style="zoom:50%;" />
+    <img src="imgs/socket/reactor.png" alt="reactor" style="zoom:50%;" />
 
 * Reactor处理流程
 
@@ -151,7 +165,7 @@
     * 可以将任务分成IO密集型和CPU密集型任务，然后分别用不同的线程池去处理。 只要分完之后两个任务的执行时间相差不大，那么就会比串行执行来的高效
     * 因为如果划分之后两个任务执行时间有数据级的差距，那么拆分没有意义
     * 因为先执行完的任务就要等后执行完的任务，最终的时间仍然取决于后执行完的任务，而且还要加上任务拆分与合并的开销，得不偿失
-  * 使用线程池目的：**提高服务器性能，以空间换时间。减少在创建和销毁线程上所花的时间以及申请系统资源的开销，分配系统资源的系统调用是很耗时的。程序运行时预先创建一个线程的集合，当用户请求到来时，可以直接从线程池取得一个执行实体，而无需动态调用pthread_create等函数来创建线程。执行实体用完后可以放回线程池，以供循环使用。**
+  * 使用线程池目的：**提高服务器性能，以空间换时间。减少在创建和销毁线程上所花的时间以及申请系统资源的开销，分配系统资源的系统调用是很耗时的。程序运行时预先创建一个线程的集合，当用户请求到来时，可以直接从线程池取得一个执行实体，而无需动态调用pthread_create等函数来创建线程。执行实体用完后可以放回线程池，以供循环使用**
 
 * **C++11简单线程池实现代码**
 
@@ -249,8 +263,31 @@
   * **非阻塞的实现CAS（Compare-and-Swap）**
     * CAS指令需要有3个操作数，分别是内存地址（在java中理解为变量的内存地址，用V表示）、旧的预期值（用A表示）和新值（用B表示）。CAS指令执行时，当且仅当V处的值符合旧预期值A时，处理器用B更新V处的值，否则它就不执行更新，但是无论是否更新了V处的值，都会返回V的旧值，上述的处理过程是一个原子操作
   * **CAS的ABA问题**
-    * 因为CAS需要在操作值的时候检查下值有没有发生变化，如果没有发生变化则更新，但是一个值原来是A，变成了B，又变成了A，那么使用CAS进行检查时会发现它的值没有发生变化，但是实际上却变化了。CAS只关注了比较前后的值是否改变，而无法清楚在此过程中变量的变更明细，这就是所谓的ABA漏洞。
+    * 因为CAS需要在操作值的时候检查下值有没有发生变化，如果没有发生变化则更新，但是一个值原来是A，变成了B，又变成了A，那么使用CAS进行检查时会发现它的值没有发生变化，但是实际上却变化了。CAS只关注了比较前后的值是否改变，而无法清楚在此过程中变量的变更明细，这就是所谓的ABA漏洞
   * ABA问题的解决思路就是使用版本号(如MySQL的MVCC)。在变量前面追加版本号，每次变量更新的时候把版本号加一，那么A-B-A就变成了1A-2B-3C
+
+# Netty
+
+* http://www.infoq.com/cn/articles/netty-high-performance#anch111813
+* https://www.cnblogs.com/nanaheidebk/p/11025362.html
+* Netty对NIO的API进行了封装，通过以下手段让性能又得到了一定程度的提升
+  1. 使用多路复用技术，提高处理连接的并发性
+  2. 零拷贝：Netty的接收和发送数据采用DIRECT BUFFERS，使用堆外直接内存进行Socket读写，不需要进行字节缓冲区的二次拷贝
+  2. Netty提供了组合Buffer对象，可以聚合多个ByteBuffer对象进行一次操作
+  3. Netty的文件传输采用了transferTo方法，它可以直接将文件缓冲区的数据发送到目标Channel，避免了传统通过循环write方式导致的内存拷贝问题
+  3. 内存池：为了减少堆外直接内存的分配和回收产生的资源损耗问题，Netty提供了基于内存池的缓冲区重用机制
+  4. 使用主从Reactor多线程模型，提高并发性
+  5. 采用了**串行无锁化设计**，在IO线程内部进行串行操作，避免多线程竞争导致的性能下降
+  6. 默认使用Protobuf的序列化框架
+  9. 灵活的TCP参数配置
+* 在Netty里面，Accept连接可以使用单独的线程池去处理，读写操作又是另外的线程池来处理
+* **Accept连接和读写操作也可以使用同一个线程池来进行处理**。而**请求处理逻辑既可以使用单独的线程池进行处理，也可以跟放在读写线程一块处理**。线程池中的每一个线程都是NIO线程。用户可以根据实际情况进行组装，构造出满足系统需求的高性能并发模型
+* 在 Netty 服务器端编程中我们需要 BossEventLoopGroup 和 WorkerEventLoopGroup 两个 EventLoopGroup 来进行工作
+  * BossEventLoopGroup 通常是一个单线程的 EventLoop，EventLoop 维护着一个注册了 ServerSocketChannel 的 Selector 实例，EventLoop 的实现涵盖 IO 事件的分离，和分发（Dispatcher），EventLoop 的实现充当 Reactor 模式中的分发（Dispatcher）的角色
+  * 所以通常可以将 BossEventLoopGroup 的线程数参数为 1
+  * **BossEventLoop 只负责处理连接**，故开销非常小，新连接到来，马上按照策略**将 SocketChannel 转发给WorkerEventLoopGroup**，WorkerEventLoopGroup 会由 next 选择其中一个 EventLoop 来将这 个SocketChannel 注册到其维护的 Selector 并对其后续的 IO 事件进行处理
+* 当系统在运行过程中，如果频繁的进行线程上下文切换，会带来额外的性能损耗。**多线程并发执行某个业务流程，业务开发者还需要时刻对线程安全保持警惕，哪些数据可能会被并发修改**，如何保护？这不仅降低了开发效率，也会带来额外的性能损耗
+  * 为了解决上述问题，Netty采用了**串行化设计理念**，**从消息的读取、编码以及后续 ChannelHandler 的执行，始终都由 IO 线程 EventLoop 负责**，这就意味着**整个流程不会进行线程上下文的切换**，**数据也不会面临被并发修改的风险**
 
 # 系统性能优化
 
@@ -262,7 +299,7 @@
   * 数据库负载很重，请帮忙分析一下
   * xxx功能打开需要1分钟，请帮忙分析一下
 * 在接到这些性能优化的时候，运维工程师希望能够了解下面的信息以判断问题的类型：
-  * 系统性问题：比如CPU利用率，SWAP利用率，或者IO过高导致的整体性能下降
+  * 系统性问题：**比如CPU利用率，SWAP利用率，或者IO过高导致的整体性能下降**
   * 功能性问题：整体性能良好，个别功能时延很长
   * 新出现问题：什么时候开始的？之前系统有哪些变动？（升级或者管理的资源大量增加）
   * 不规律问题：有时候快，有时候慢，没有特定的规律
@@ -276,14 +313,14 @@
   * 达到合理的硬件和软件配置
   * 使系统资源使用达到最大的平衡
 * 一般情况下系统良好运行的时候恰恰各项资源达到了一个平衡状态，任何一项资源的过度使用都会造成平衡体系破坏，从而造成系统负载极高或者响应迟缓
-* 比如cpu过度使用会造成大量进程等待cpu资源，系统响应变慢，等待会造成进程数增加，进程增加又会造成内存使用增加，内存耗尽又会造成虚拟内存使用，使用虚拟内存又会造成磁盘IO增加和cpu开销增加
+* **比如cpu过度使用会造成大量进程等待cpu资源，系统响应变慢，等待会造成进程数增加，进程增加又会造成内存使用增加，内存耗尽又会造成虚拟内存使用，使用虚拟内存又会造成磁盘IO增加和cpu开销增加**
 
 ## 性能分析步骤
 
 ### 需要系统监控工具和性能分析工具
 
 * 对资源使用状况进行长期的监控和数据采集（nagios、cacti、ganglia、zabbix）
-* 使用常见的性能分析工具（vmstat、top、htop、iotop、free、iostat、ifstat等）
+* 使用常见的性能分析工具（**vmstat**、**top**、htop、**iotop**、**free**、**iostat**、**ifstat**等）
 * 实战技能和经验积累
 
 ### 出现性能问题的可能原因
@@ -321,31 +358,31 @@
 
 ### 系统安装优化
 
-![sys_install_refine](https://gitee.com/canqchen/cloudimg/raw/master/img/sys_install_refine.jpg)
+<img src="imgs/sys_refinement/sys_install_refine.png" alt="sys_install_refine" style="zoom:80%;" />
 
 ### 内核参数优化
 
-![kernel_params](https://gitee.com/canqchen/cloudimg/raw/master/img/kernel_params.jpg)
+<img src="imgs/sys_refinement/kernel_params.png" alt="kernel_params" style="zoom:80%;" />
 
 ### 文件系统优化
 
-![file_sys_refine](https://gitee.com/canqchen/cloudimg/raw/master/img/file_sys_refine.jpg)
+<img src="imgs/sys_refinement/file_sys_refine.png" alt="file_sys_refine" style="zoom:80%;" />
 
 ## 系统性能分析工具
 
 * vmstat
 
-  ![vmstat](https://gitee.com/canqchen/cloudimg/raw/master/img/vmstat.jpg)
+  <img src="imgs/sys_refinement/vmstat.png" alt="vmstat" style="zoom:80%;" />
 
 * iostat
 
-  ![iostat](https://gitee.com/canqchen/cloudimg/raw/master/img/iostat.jpg)
+  <img src="imgs/sys_refinement/iostat.png" alt="iostat" style="zoom:80%;" />
 
 * sar
 
-  ![sar](https://gitee.com/canqchen/cloudimg/raw/master/img/sar.jpg)
+  <img src="imgs/sys_refinement/sar.png" alt="sar" style="zoom:80%;" />
 
 ## 系统性能分析标准
 
-![standard](https://gitee.com/canqchen/cloudimg/raw/master/img/standard.jpg)
+<img src="imgs/sys_refinement/standard.png" alt="standard" style="zoom:80%;" />
 
