@@ -82,7 +82,7 @@
 
 <img src="imgs/database/redis_string.png" alt="redis_string" style="zoom:80%;" />
 
-```
+```c++
 > set hello world
 OK
 > get hello
@@ -95,11 +95,11 @@ OK
 
 ## LIST
 
-* 实现方式：Redis list的实现为一个**双向链表**，即可以支持反向查找和遍历，更方便操作，不过带来了部分额外的内存开销，Redis内部的很多实现，包括发送缓冲队列等也都是用的这个数据结构
+* 实现方式：Redis list的实现为一个**双向链表**，即可以支持反向查找和遍历，更方便操作，不过带来了部分额外的内存开销，Redis内部的很多实现，包括**发送缓冲队列**等也都是用的这个数据结构
 
 <img src="imgs/database/redis_list.png" alt="redis_list" style="zoom:80%;" />
 
-```
+```shell
 > rpush list-key item
 (integer) 1
 > rpush list-key item2

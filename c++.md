@@ -1,5 +1,17 @@
 # 基础
 
+## main函数执行前完成什么工作？
+
+main函数执行之前主要是初始化系统资源
+
+1. 设置栈指针
+2. 初始化static静态和global全局变量，即data段内容
+3. 将未初始化部分的赋初值：数值型short，int，long等为0，bool为FALSE，指针为NULL，等等，即.bss段的内容
+4. 运行全局构造器，估计是C++中构造函数之类
+5. 将main函数的参数，argc，argv等传递给main函数，然后才真正运行main函数
+
+**在C++内部，在全局构造函数中，访问其他全局或者静态变量，其结果是不可预知的**
+
 ## C/C++程序内存的分配
 
 * 一个C/C++编译的程序占用内存分为以下几个部分：
@@ -62,7 +74,7 @@
 * 构造函数：构造函数是用来初始化对象的。假如子类可以继承基类构造函数，那么子类对象的构造将使用基类的构造函数，而基类构造函数并不知道子类的有什么成员，显然是不符合语义的。从另外一个角度来讲，多态是通过基类指针指向子类对象来实现多态的，在对象构造之前并没有对象产生，因此无法使用多态特性，这是矛盾的。因此构造函数不允许继承
 * 内联成员函数：内联函数就是为了在代码中直接展开，减少函数调用花费的代价。也就是说内联函数是在编译时展开的。而虚函数是为了实现多态，是在运行时绑定的。因此显然内联函数和多态的特性相违背
 * 静态成员函数：首先静态成员函数理论是可继承的，但是静态成员函数是编译时确定的，无法动态绑定，不支持多态，因此不能被重写，也就不能被声明为虚函数
-* 一个类（无论是普通类还是类模板）的成员模板（本身是模板的成员函数）不能是虚函数
+* 一个类（**无论是普通类还是类模板**）的成员模板（**本身是模板的成员函数**）不能是虚函数
 
 ## NULL和nullptr的区别
 
@@ -87,7 +99,7 @@
 
 * 可见，在C++中，NULL实际上是0。 因为**C++中不能把void*类型的指针隐式转换成其他类型的指针，所以为了解决空指针的表示问题，C++引入了0来表示空指针**，这样就有了上述代码中的NULL宏定义
 
-* 但是实际上，用NULL代替0表示空指针在函数重载时会出现问题，程序执行的结果会与我们的想法不同，举例如下：
+* 但是实际上，用NULL代替0表示空指针**在函数重载时会出现问题**，程序执行的结果会与我们的想法不同，举例如下：
 
   ```c++
   #include <iostream>
@@ -122,8 +134,8 @@
 
 **内存对齐作用：**
 
-1. 平台原因(移植原因)：不是所有的硬件平台都能访问任意地址上的任意数据的；某些硬件平台只能在某些地址处取某些特定类型的数据，否则抛出硬件异常
-2. 性能原因：数据结构(尤其是栈)应该尽可能地在自然边界上对齐。原因在于，**为了访问未对齐的内存，处理器需要作两次内存访问**；而对齐的内存访问仅需要一次访问
+1. 平台原因(移植原因)：**不是所有的硬件平台都能访问任意地址上的任意数据的；某些硬件平台只能在某些地址处取某些特定类型的数据，否则抛出硬件异常**
+2. 性能原因：**数据结构(尤其是栈)应该尽可能地在自然边界上对齐**。原因在于，**为了访问未对齐的内存，处理器需要作两次内存访问**；而对齐的内存访问仅需要一次访问
 
 **内存对齐的3大规则:**
 
@@ -131,7 +143,7 @@
 2. 结构体内所有数据成员各自内存对齐后，**结构体本身还要进行一次内存对齐，保证整个结构体占用内存大小是结构体内最大数据成员的最小整数倍**
 3. 如程序中有#pragma pack(n)预编译指令，则所有成员对齐以n字节为准(即偏移量是n的整数倍)，不再考虑当前类型以及最大结构体内类型(**结构(或联合)本身对齐将按照#pragma pack指定的数值和结构(或联合)最大数据成员长度中，比较小的那个进行**)
 
-**`#pragma pack` 的主要作用**：
+`#pragma pack` 的主要作用
 
 * 改变编译器的内存对齐方式，这个指令在网络报文的处理中有着重要的作用，`#pragma pack(n)`是他最基本的用法，其作用是改变编译器的对齐方式， 不使用这条指令的情况下，编译器默认采取`#pragma pack(8)`也就是8字节的默认对齐方式，n值可以取（`1`， `2`， `4`， `8`， `16`） 中任意一值
 
@@ -223,6 +235,15 @@
   - 虚继承
   - 虚函数
 
+## 构造函数或析构函数调用虚函数
+
+* 简要结论： 
+  1. **从语法上讲，调用完全没有问题**
+  2. 但是从效果上看，往往不能达到需要的目的
+* Effective 的解释是： 
+  * 派生类对象构造期间进入基类的构造函数时，对象类型变成了基类类型，而不是派生类类型
+  * 同样，进入基类析构函数时，对象也是基类类型
+
 # C++11
 
 ## 原子变量介绍
@@ -231,8 +252,9 @@
 * C++11提供了一些原子变量与原子操作解决用户加锁操作麻烦或者容易出错的问题
 * C++11标准在标准库atomic头文件提供了模版std::atomic<>来定义原子量，而对于大部分内建类型，C++11提供了一些特化，如，std::atomic_int (std::atomic<int>)等
 * 自定义类型变成原子变量的条件是该类型必须为**Trivially Copyable类型**(简单的判断标准就是这个类型可以用std::memcpy按位复制)
-	
 * atomic有一个成员函数is_lock_free，这个成员函数可以告诉我们到底这个类型的原子量是使用了原子CPU指令实现了无锁化，还是依然使用的加锁的方式来实现原子操作
+
+## [内存序](https://www.cnblogs.com/FateTHarlaown/p/8919235.html)
 
 ## C++11新特性
 
@@ -300,7 +322,7 @@
 
   * reinterpret_cast：可以**用于任意类型的指针之间的转换**，对转换的结果不做任何保证
   * dynamic_cast：这种其实也是不被推荐使用的，更多使用static_cast，**dynamic本身只能用于存在虚函数的父子关系的强制类型转换**，**对于指针，转换失败则返回nullptr，对于引用，转换失败会抛出异常**
-  * const_cast：**对于未定义const版本的成员函数，我们通常需要使用const_cast来去除const引用对象的const，完成函数调用**。另外一种使用方式，**结合static_cast，可以在非const版本的成员函数内添加const，调用完const版本的成员函数后，再使用const_cast去除const限定**。
+  * const_cast：**对于未定义const版本的成员函数，我们通常需要使用const_cast来去除const引用对象的const，完成函数调用**。另外一种使用方式，**结合static_cast，可以在非const版本的成员函数内添加const，调用完const版本的成员函数后，再使用const_cast去除const限定**
   * static_cast：完成基础数据类型；同一个继承体系中类型的转换；任意类型与空指针类型void* 之间的转换
 
 
@@ -420,7 +442,7 @@
   template<typename T>
   class weak_ptr{
   public:
-      weak_ptr(): ptr(nullptr), cnt(nullptr){
+      weak_ptr(): ptr(nullptr), cnt(nullptr) {
       }
   
       weak_ptr(const shared_ptr<T> & sp): ptr(sp.ptr), cnt(sp.cnt){
@@ -550,6 +572,55 @@
   }
   ```
 
+## shared_ptr要点
+
+* https://www.cnblogs.com/yahoo17/p/12862958.html
+
+* 对于std::shared_ptr，即便父类析构函数并非虚函数，其子类的析构函数依然可以被调用，因为其 ref_count 记住了子类的实际类型
+
+* 它借由模板构造函数窃取到了实际的指针信息，即子类的信息
+
+  ```c++
+  template <>
+  class _Ptr_base<B> {
+      //...
+  
+  private:
+      B* _Ptr;
+      _Ref_count_base* _Rep;
+  }
+  
+  template <>
+  class _Ref_count<D> : public _Ref_count_base {
+  public:
+      explicit _Ref_count(D* _Px) : _Ref_count_base(), _Ptr(_Px) {}
+  
+  private:
+      // 最后析构函数会调用到这里
+      virtual void _Destroy() noexcept override {
+          delete _Ptr;
+      }
+  
+      D* _Ptr;
+  };
+  
+  template <>
+  class shared_ptr<B> : public _Ptr_base<B> {
+      explicit shared_ptr(D* _Px) {
+          _Ptr = _Px; // _Ptr 静态类型是 B，但保存 new D() 的裸指针
+          _Rep = new _Ref_count<D>(_Px) // _Ref_count 是 _Ref_count_base 的子类，该类保存了一个指向 D 的指针
+      }
+  }
+  
+  
+  std::shared_ptr<Base> ptr(new Derived());
+  
+  // 如下图，ref_count中的ptr指针在初始化时，是根据模板推导出的Derived类型
+  // 最后share_ptr析构的时候，是直接delete ptr，而ptr是子类类型，所以会调用子类的析构函数
+  ```
+
+  <img src="imgs/c++/shared_ptr.png" alt="shared_ptr" style="zoom:67%;" />
+
 ## enable_share_from_this
 
 * C++11开始时支持 `enable_shared_from_this`，它一个模板类，定义在头文件 `<memory>`，其原型为： 
@@ -613,7 +684,7 @@
         // 这是C++11推荐的方法，可以实现安全的返回一个shared_ptr<this>，
         // 返回到外面的shared_ptr的拷贝的use_count是1，不用担心this被意外delete和引用计数异常的问题
         shared_ptr<obj> getSharedFromThis() {
-            return shared_from_this();  
+            return shared_from_this();
         }
     private:
         shared_ptr<obj> *p;
@@ -745,10 +816,6 @@
   * enable_shared_from_this 的常见实现为：**其内部保存着一个对 this 的弱引用**（例如 std::weak_ptr )。 std::shared_ptr 的构造函数检测无歧义且可访问的 (C++17 起) enable_shared_from_this 基类，并且若内部存储的弱引用没有被以存在的 std::shared_ptr 占有，则 (C++17 起)赋值新建的 std::shared_ptr 为内部存储的弱引用。为另一个 std::shared_ptr 所管理的对象构造一个 std::shared_ptr ，将不会考虑内部存储的弱引用，从而将导致未定义行为(undefined behavior)。
   * **只允许在先前已被std::shared_ptr 管理的对象上调用 shared_from_this** 。否则调用行为未定义 (C++17 前)抛出 std::bad_weak_ptr 异常（通过 shared_ptr 从默认构造的 weak_this 的构造函数） (自C++17 起)。
   * enable_shared_from_this 提供安全的替用方案，以替代 std::shared_ptr(this) 这样的表达式（这种不安全的表达式可能会导致 this 被多个互不知晓的所有者析构）
-
-## 内存序
-
-* https://www.cnblogs.com/FateTHarlaown/p/8919235.html
 
 # 模板
 
